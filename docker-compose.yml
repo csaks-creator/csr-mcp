@@ -1,0 +1,21 @@
+services:
+  server:
+    build: ./server
+    ports:
+      - "8000:8000"
+    environment:
+      NOVA_ACT_API_KEY: ${NOVA_ACT_API_KEY:?set NOVA_ACT_API_KEY in .env}
+      MCP_API_TOKEN: ${MCP_API_TOKEN:?set MCP_API_TOKEN in .env}
+      ALLOWED_DOMAINS: ${ALLOWED_DOMAINS:-}
+      MAX_CONCURRENT_SESSIONS: "2"
+    shm_size: 1gb
+
+  client:
+    build: ./client
+    ports:
+      - "8501:8501"
+    environment:
+      MCP_SERVER_URL: http://server:8000/mcp
+      MCP_API_TOKEN: ${MCP_API_TOKEN:?set MCP_API_TOKEN in .env}
+    depends_on:
+      - server

@@ -1,0 +1,19 @@
+{
+	"servers": {
+		"nova-act-mcp": {
+			"type": "http",
+			"url": "http://localhost:8000/mcp",
+			"headers": {
+				"Authorization": "Bearer ${input:mcp-token}"
+			}
+		}
+	},
+	"inputs": [
+		{
+			"id": "mcp-token",
+			"type": "promptString",
+			"description": "MCP_API_TOKEN",
+			"password": true
+		}
+	]
+}
