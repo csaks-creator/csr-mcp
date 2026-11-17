@@ -8,6 +8,7 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
 REQUEST_TIMEOUT = 600  # Nova Act tasks can run for minutes
+CONNECT_TIMEOUT = 15  # fail fast when the server is unreachable
 
 st.set_page_config(page_title="Nova Act MCP Client", layout="wide")
 
@@ -15,11 +16,17 @@ st.set_page_config(page_title="Nova Act MCP Client", layout="wide")
 async def _run(url: str, token: str, fn):
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     async with streamablehttp_client(
-        url, headers=headers, timeout=REQUEST_TIMEOUT, sse_read_timeout=REQUEST_TIMEOUT
+        url, headers=headers, timeout=CONNECT_TIMEOUT, sse_read_timeout=REQUEST_TIMEOUT
     ) as (read, write, _):
         async with ClientSession(read, write) as session:
             await session.initialize()
             return await fn(session)
+
+
+def _describe(error: BaseException) -> str:
+    while isinstance(error, BaseExceptionGroup) and error.exceptions:
+        error = error.exceptions[0]
+    return f"{type(error).__name__}: {error}"
 
 
 def _field_type(prop: dict) -> str:
@@ -66,12 +73,13 @@ with st.sidebar:
     token = os.environ.get("MCP_API_TOKEN") or st.text_input("Bearer token", type="password")
     if st.button("Refresh tools") or "tools" not in st.session_state:
         try:
-            result = asyncio.run(_run(server_url, token, lambda s: s.list_tools()))
+            with st.spinner(f"Connecting to {server_url}..."):
+                result = asyncio.run(_run(server_url, token, lambda s: s.list_tools()))
             st.session_state.tools = {t.name: t for t in result.tools}
             st.session_state.pop("error", None)
         except Exception as e:  # network and protocol errors surface in the UI
             st.session_state.tools = {}
-            st.session_state.error = f"{type(e).__name__}: {e}"
+            st.session_state.error = _describe(e)
 
 if "error" in st.session_state:
     st.error(f"Could not list tools from {server_url}\n\n{st.session_state.error}")
@@ -108,7 +116,7 @@ if tools:
                     )
                 )
             except Exception as e:
-                st.error(f"{type(e).__name__}: {e}")
+                st.error(_describe(e))
             else:
                 (st.error if result.isError else st.success)("Tool returned an error" if result.isError else "Done")
                 for block in result.content:
