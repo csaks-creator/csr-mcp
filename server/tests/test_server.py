@@ -58,6 +58,12 @@ def test_rest_requires_token(client):
     assert r.status_code == 401
 
 
+def test_token_whitespace_is_ignored(client, monkeypatch):
+    monkeypatch.setenv("MCP_API_TOKEN", "test-token\n")
+    r = client.post("/search", headers={"Authorization": "Bearer test-token "}, json={"url": "https://example.com", "query": "x"})
+    assert r.status_code == 200
+
+
 def test_search_limits_results(client):
     r = client.post("/search", headers=AUTH, json={"url": "https://example.com", "query": "x", "max_results": 2})
     assert r.status_code == 200

@@ -70,7 +70,14 @@ st.title("Nova Act MCP Client")
 
 with st.sidebar:
     server_url = st.text_input("MCP server URL", os.environ.get("MCP_SERVER_URL", "http://localhost:8000/mcp"))
-    token = os.environ.get("MCP_API_TOKEN") or st.text_input("Bearer token", type="password")
+    env_token = os.environ.get("MCP_API_TOKEN", "").strip()
+    override = st.text_input(
+        "Bearer token override (optional)" if env_token else "Bearer token", type="password"
+    ).strip()
+    token = override or env_token
+    st.caption(
+        f"Token source: {'sidebar' if override else 'environment' if env_token else 'none'}, length {len(token)}"
+    )
     if st.button("Refresh tools") or "tools" not in st.session_state:
         try:
             with st.spinner(f"Connecting to {server_url}..."):

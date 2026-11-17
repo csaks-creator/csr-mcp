@@ -1,5 +1,6 @@
 import fnmatch
 import ipaddress
+import logging
 import os
 import secrets
 import socket
@@ -9,16 +10,20 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from nova_act import GuardrailDecision, GuardrailInputState
 
+logger = logging.getLogger("uvicorn.error")
 _bearer = HTTPBearer(auto_error=False)
 
 
 def verify_token(creds: HTTPAuthorizationCredentials | None = Depends(_bearer)) -> None:
     if os.environ.get("AUTH_DISABLED") == "1":
         return
-    expected = os.environ.get("MCP_API_TOKEN")
+    expected = os.environ.get("MCP_API_TOKEN", "").strip()
     if not expected:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "MCP_API_TOKEN is not configured")
-    if creds is None or not secrets.compare_digest(creds.credentials, expected):
+    received = creds.credentials.strip() if creds else ""
+    if not secrets.compare_digest(received, expected):
+        # Lengths only, never the values: enough to spot a truncated or padded token.
+        logger.warning("Rejected bearer token: received length %d, expected length %d", len(received), len(expected))
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED, "Invalid or missing bearer token", headers={"WWW-Authenticate": "Bearer"}
         )
