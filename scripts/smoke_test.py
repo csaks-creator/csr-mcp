@@ -78,7 +78,7 @@ def main() -> int:
             "params": {"name": "add_numbers", "arguments": {"a": 2, "b": 3}},
         }
         status, body = post(args.url, add, args.token, 30)
-        ok = status == 200 and result_of(body)["result"].get("structuredContent", {}).get("result") == 5
+        ok = status == 200 and json.loads(result_of(body)["result"]["content"][0]["text"]).get("result") == 5
         check("add_numbers returns 5", ok, f"got {status}: {body[:200]}")
 
     if args.call_tool:
