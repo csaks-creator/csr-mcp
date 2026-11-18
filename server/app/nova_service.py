@@ -24,6 +24,8 @@ ACT_TIMEOUT_SECONDS = int(os.environ.get("ACT_TIMEOUT_SECONDS", "180"))
 def nova_session(url: str) -> Iterator[NovaAct]:
     """Open a headless Nova Act browser session on a validated URL, limited by MAX_CONCURRENT_SESSIONS."""
     validate_url(url)
+    logs_dir = os.environ.get("NOVA_LOGS_DIR", os.path.join(tempfile.gettempdir(), "nova_act_logs"))
+    os.makedirs(logs_dir, exist_ok=True)  # NovaAct raises InvalidPath if it is missing
     if not _slots.acquire(blocking=False):
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "All browser sessions are busy; retry shortly")
     try:
@@ -32,7 +34,7 @@ def nova_session(url: str) -> Iterator[NovaAct]:
             headless=os.environ.get("NOVA_HEADLESS", "1") == "1",
             tty=False,
             state_guardrail=state_guardrail,
-            logs_directory=os.environ.get("NOVA_LOGS_DIR", os.path.join(tempfile.gettempdir(), "nova_act_logs")),
+            logs_directory=logs_dir,
         ) as nova:
             yield nova
     except HTTPException:

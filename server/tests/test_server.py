@@ -1,3 +1,4 @@
+import os
 import socket
 
 import pytest
@@ -17,6 +18,7 @@ class FakeResult:
 
 class FakeNova:
     def __init__(self, **kwargs):
+        assert os.path.isdir(kwargs["logs_directory"]), "NovaAct requires logs_directory to exist"
         self.kwargs = kwargs
 
     def __enter__(self):
