@@ -52,6 +52,25 @@ class FillFormResponse(BaseModel):
     report: str | None
 
 
+class AddRequest(BaseModel):
+    a: float = Field(description="First number")
+    b: float = Field(description="Second number")
+
+
+class AddResponse(BaseModel):
+    result: float
+
+
+@router.post(
+    "/add",
+    operation_id="add_numbers",
+    summary="Add two numbers",
+    description="Return the sum of two numbers. Does not use a browser.",
+)
+def add_numbers(req: AddRequest) -> AddResponse:
+    return AddResponse(result=req.a + req.b)
+
+
 @router.post(
     "/search",
     operation_id="search_website",

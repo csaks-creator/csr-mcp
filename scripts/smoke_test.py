@@ -16,7 +16,7 @@ import sys
 import urllib.error
 import urllib.request
 
-EXPECTED_TOOLS = {"search_website", "extract_page_data", "fill_form"}
+EXPECTED_TOOLS = {"search_website", "extract_page_data", "fill_form", "add_numbers"}
 
 
 def post(url: str, body: dict, token: str | None, timeout: int) -> tuple[int, str]:
@@ -70,6 +70,16 @@ def main() -> int:
     if status == 200:
         names = {t["name"] for t in result_of(body)["result"]["tools"]}
         check("lists expected tools", EXPECTED_TOOLS <= names, f"found {sorted(names)}")
+
+        add = {
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "tools/call",
+            "params": {"name": "add_numbers", "arguments": {"a": 2, "b": 3}},
+        }
+        status, body = post(args.url, add, args.token, 30)
+        ok = status == 200 and result_of(body)["result"].get("structuredContent", {}).get("result") == 5
+        check("add_numbers returns 5", ok, f"got {status}: {body[:200]}")
 
     if args.call_tool:
         call = {

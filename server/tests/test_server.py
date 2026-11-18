@@ -66,6 +66,13 @@ def test_token_whitespace_is_ignored(client, monkeypatch):
     assert r.status_code == 200
 
 
+def test_add_numbers(client):
+    r = client.post("/add", headers=AUTH, json={"a": 2, "b": 3.5})
+    assert r.status_code == 200 and r.json() == {"result": 5.5}
+    assert client.post("/add", json={"a": 1, "b": 1}).status_code == 401
+    assert client.post("/add", headers=AUTH, json={"a": "x", "b": 1}).status_code == 422
+
+
 def test_search_limits_results(client):
     r = client.post("/search", headers=AUTH, json={"url": "https://example.com", "query": "x", "max_results": 2})
     assert r.status_code == 200
@@ -106,7 +113,7 @@ def test_mcp_lists_three_tools(client):
     client.post("/mcp", headers=headers, json={"jsonrpc": "2.0", "method": "notifications/initialized"})
     r = client.post("/mcp", headers=headers, json={"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
     body = r.text
-    for name in ("search_website", "extract_page_data", "fill_form"):
+    for name in ("search_website", "extract_page_data", "fill_form", "add_numbers"):
         assert name in body, body
     assert "health" not in body
 
