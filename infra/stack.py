@@ -3,6 +3,7 @@ from aws_cdk import aws_ec2 as ec2
 from aws_cdk import aws_ecr_assets as ecr_assets
 from aws_cdk import aws_ecs as ecs
 from aws_cdk import aws_elasticloadbalancingv2 as elbv2
+from aws_cdk import aws_iam as iam
 from aws_cdk import aws_logs as logs
 from aws_cdk import aws_secretsmanager as secretsmanager
 from constructs import Construct
@@ -22,6 +23,7 @@ class NovaActMcpStack(Stack):
         certificate_arn: str | None,
         allowed_domains: str,
         server_count: int,
+        helpdesk_lambda_arn: str | None = None,
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -112,6 +114,12 @@ class NovaActMcpStack(Stack):
             logging=ecs.LogDrivers.aws_logs(stream_prefix="client", log_retention=logs.RetentionDays.ONE_MONTH),
         )
         # Streamlit keeps per-browser state in memory, so keep one task (stickiness is also enabled below).
+        if helpdesk_lambda_arn:
+            client_task.default_container.add_environment("HELPDESK_LAMBDA_ARN", helpdesk_lambda_arn)
+            client_task.default_container.add_environment("HELPDESK_REGION", self.region)
+            client_task.task_role.add_to_policy(
+                iam.PolicyStatement(actions=["lambda:InvokeFunction"], resources=[helpdesk_lambda_arn])
+            )
         client_service = ecs.FargateService(
             self,
             "ClientService",

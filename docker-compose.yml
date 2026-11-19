@@ -17,5 +17,11 @@ services:
     environment:
       MCP_SERVER_URL: http://server:8000/mcp
       MCP_API_TOKEN: ${MCP_API_TOKEN:?set MCP_API_TOKEN in .env}
+      HELPDESK_LAMBDA_ARN: ${HELPDESK_LAMBDA_ARN:-}
+      HELPDESK_REGION: ${HELPDESK_REGION:-us-east-1}
+      # Passed through from your shell when set, so the help desk page can invoke the Lambda locally.
+      AWS_ACCESS_KEY_ID:
+      AWS_SECRET_ACCESS_KEY:
+      AWS_SESSION_TOKEN:
     depends_on:
       - server

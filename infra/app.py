@@ -22,6 +22,7 @@ NovaActMcpStack(
     certificate_arn=ctx("certificate_arn"),
     allowed_domains=ctx("allowed_domains", ""),
     server_count=int(ctx("server_count", "2")),
+    helpdesk_lambda_arn=ctx("helpdesk_lambda_arn"),
     env=cdk.Environment(
         account=os.environ.get("CDK_DEFAULT_ACCOUNT"), region=os.environ.get("CDK_DEFAULT_REGION")
     ),
