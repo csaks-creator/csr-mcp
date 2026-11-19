@@ -1,0 +1,35 @@
+[
+  {
+    "name": "create_jira_ticket",
+    "description": "Create a Jira issue for an IT problem that needs tracking or escalation. Use this when a user reports an issue (VPN, Wi-Fi, password/MFA, email, performance, printing, meetings, access, or software) that should be logged as a ticket, or when the user asks to raise a ticket. Returns the Jira issue key and URL.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "Short one-line summary of the issue."
+        },
+        "description": {
+          "type": "string",
+          "description": "Full details of the problem: symptoms, exact error, device/OS, and steps already tried."
+        }
+      },
+      "required": [
+        "summary"
+      ]
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "issue_key": {
+          "type": "string",
+          "description": "The created Jira issue key, e.g. KAN-2."
+        },
+        "url": {
+          "type": "string",
+          "description": "Link to the created issue."
+        }
+      }
+    }
+  }
+]
